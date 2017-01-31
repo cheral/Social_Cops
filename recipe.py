@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-
+import json#!/usr/bin/env python
+import unirest
 #   Copyright 2015 AlchemyAI
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,9 @@ import os, sys, string, time, re
 import requests, json, urllib, urllib2, base64
 import pymongo
 from multiprocessing import Pool, Lock, Queue, Manager
+from alchemyapi import AlchemyAPI
+alchemyapi = AlchemyAPI()
+from TwitterSearch import *
 
 def main(search_term, num_tweets):
 
@@ -325,7 +328,43 @@ def print_results():
     print "User: %s" % most_negative_tweet['screen_name']
     print "Time: %s" % most_negative_tweet['time']
     print "Score: %f" % float(most_negative_tweet['score'])
-    return
+    try:
+        tso = TwitterSearchOrder() # create a TwitterSearchOrder object
+        tso.set_keywords([sys.argv[1]]) # let's define all words we would like to have a look for
+        tso.set_language('de') # we want to see German tweets only
+        tso.set_include_entities(False) # and don't give us all those entity information
+
+        # it's about time to create a TwitterSearch object with our secret tokens
+        ts = TwitterSearch(
+            consumer_key = 'iazUZJyv1OhemmUQwSsuPwIQ0',
+            consumer_secret = 'GgFUsyicMxSxnLoOLk8aDH0cczWR01T0ppcbGLzdrDLnDdzntQ',
+            access_token = '1927542330-FBOlw8sAY4GGKNE5Yxb5RYzBHOKdRbIAMoSLMdL',
+            access_token_secret = 'r080wi6AeGoCDezGBVy0ChjcuA4nuhH0vQn0PYYBi2MhW'
+         )
+
+         # this is where the fun actually starts :)
+        
+        for tweet in ts.search_tweets_iterable(tso):
+            sta=tweet['text'].encode('utf-8')
+#             response = unirest.get("https://alchemy.p.mashape.com/text/TextGetRankedNamedEntities?outputMode=json&text="+sta,
+#   headers={
+#     "X-Mashape-Key": "rkDrwLWxfImsh3GAvDUHknMQNsIxp1u3wy8jsnPfD2sC0dOVOJ",
+    
+#   }
+# )
+            
+            with open("tweet.txt", "a") as myfile:
+                myfile.write(sta+"\n")
+            # with open("tweetentity.txt", "a") as myfile:
+            #     ar=str(response)
+            #     myfile.write(sta+"----->>>"+ar)
+            
+           # print( '@%s tweeted: %s' % ( tweet['user']['screen_name'], tweet['text'] ) )
+
+
+    except TwitterSearchException as e: # take care of all those ugly errors if there are some
+        with open("tweet.txt", "a") as myfile:
+                myfile.write(e)
 
 if __name__ == "__main__":
 
